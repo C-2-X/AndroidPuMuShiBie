@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.AndroidPuMuShiBie" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/brandBlue</item>
+        <item name="colorOnPrimary">@color/brandOnBlue</item>
+        <item name="colorSecondary">@color/brandBlueDark</item>
+        <item name="colorOnSecondary">@color/brandOnBlue</item>
+        <item name="colorSurface">@color/cardBackground</item>
+        <item name="colorOutline">@color/outlineNeutral</item>
+        <item name="android:windowBackground">@color/screenBackground</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/screenBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="Theme.AndroidPuMuShiBie.Transparent" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+    </style>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="screenBackground">#FFF4F6FA</color>
+    <color name="cardBackground">#FFFFFFFF</color>
+    <color name="cardStroke">#1A213547</color>
+    <color name="surfaceTint">#FF5E7BF7</color>
+    <color name="textPrimary">#FF17212B</color>
+    <color name="textSecondary">#FF5F6F82</color>
+    <color name="textMuted">#FF8391A2</color>
+    <color name="brandBlue">#FF4B6BFB</color>
+    <color name="brandBlueDark">#FF3350D6</color>
+    <color name="brandOnBlue">#FFFFFFFF</color>
+    <color name="outlineNeutral">#33213547</color>
+    <color name="selectionMask">#AA000000</color>
+    <color name="selectionStroke">#FFFFFFFF</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>
