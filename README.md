@@ -33,9 +33,18 @@
 2. **一键截屏+框选**：点击悬浮球 → 屏幕冻结 → 半透明蒙层 → 拖拽四角调整大小/选区整体移动
 3. **百度 OCR 集成**：支持自定义 API Key/Secret Key，自动 Token 缓存，提前刷新避免过期
 4. **结果面板**：可拖拽浮动卡片，高度自适应，内容多时可静默滚动（无可见滚动条）
-5. **历史记录**：本地保存最近 100 条识别文本，仅在主界面查看
+5. **历史记录**：本地保存最近 100 条识别文本，支持单条删除和清空
 6. **权限按需申请**：悬浮窗/无障碍/屏幕录制（MediaProjection）按需引导，被拒绝后提供跳转系统设置快捷方式
 7. **省电保活**：前台服务 + 常驻通知栏，引导添加电池优化白名单
+
+### 更新日志
+
+#### v2.0 (2026-05-02)
+- **截图流程优化**：VirtualDisplay 持续运行，避免频繁弹窗
+- **多指操作修复**：防止多指触摸导致的异常行为
+- **屏幕旋转适配**：监听分辨率变化，自动重建截图环境
+- **选区取消机制**：用户可中途取消已触发的选区确认
+- **历史记录管理**：支持单条删除和清空全部
 
 ---
 
@@ -43,12 +52,12 @@
 
 | 组件 | 最低版本 | 推荐版本 |
 |------|---------|---------|
-| Android Studio | Hedgehog (2023.1.1) | Jellyfish (2024.1.1) |
+| Android Studio | Arctic Fox (2020.3.x) | Jellyfish (2024.1.1) |
 | JDK | 11 | 17 (Gradle 8+ 兼容) |
 | minSdk | 29 (Android 10) | - |
 | targetSdk | 34 (Android 14) | - |
-| Gradle | 7.6 | 8.2+ |
-| Android Gradle Plugin | 7.4.2 | 8.1.x |
+| Gradle | 7.4 | 8.2+ |
+| Android Gradle Plugin | 7.2.2 | 8.1.x |
 
 ---
 
@@ -95,35 +104,35 @@ cd AndroidOcrScreen
 ## 项目架构
 
 ```
-005_AndroidPuMuShiBie/
+AndroidOcrScreen/
 ├── app/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/com/example/androidpumushibie/
-│   │   │   │   ├── MainActivity.kt / .java           # 主界面（凭证、设置、历史）
-│   │   │   │   ├── OverlayControlService.kt / .java  # 核心前台服务（悬浮球、截图、流程控制）
-│   │   │   │   ├── OcrAccessibilityService.kt / .java # 无障碍服务保活桩
-│   │   │   │   ├── MediaProjectionPermissionActivity.kt / .java # 透明代理，请求屏幕录制权限
-│   │   │   │   ├── SelectionOverlayView.kt / .java  # 截屏框选自定义 View
-│   │   │   │   ├── ResultPanelView.kt / .java       # 识别结果浮动面板
-│   │   │   │   ├── OverlayUiFactory.kt / .java      # 圆角背景等 UI 工厂
-│   │   │   │   ├── BaiduOcrApi.kt / .java           # Retrofit API 接口
-│   │   │   │   ├── BaiduOcrRepository.kt / .java    # 百度 OCR 业务逻辑（Token、编码、调用）
-│   │   │   │   ├── BaiduOcrResponse.kt / .java      # OCR 响应数据模型
-│   │   │   │   ├── BaiduTokenResponse.kt / .java    # Token 响应数据模型
-│   │   │   │   ├── SettingsManager.kt / .java       # SharedPreferences 设置管理
-│   │   │   │   ├── HistoryRepository.kt / .java     # 历史记录存取
-│   │   │   │   ├── HistoryAdapter.kt / .java        # 历史记录 RecyclerView Adapter
-│   │   │   │   └── PermissionHelper.kt / .java      # 权限检查与引导工具
+│   │   │   │   ├── MainActivity.java               # 主界面（凭证、设置、历史）
+│   │   │   │   ├── OverlayControlService.java      # 核心前台服务（悬浮球、截图、流程控制）
+│   │   │   │   ├── OcrAccessibilityService.java   # 无障碍服务保活桩
+│   │   │   │   ├── MediaProjectionPermissionActivity.java  # 透明代理，请求屏幕录制权限
+│   │   │   │   ├── SelectionOverlayView.java       # 截屏框选自定义 View
+│   │   │   │   ├── ResultPanelView.java            # 识别结果浮动面板
+│   │   │   │   ├── OverlayUiFactory.java           # 圆角背景等 UI 工厂
+│   │   │   │   ├── BaiduOcrApi.java                # Retrofit API 接口
+│   │   │   │   ├── BaiduOcrRepository.java         # 百度 OCR 业务逻辑（Token、编码、调用）
+│   │   │   │   ├── BaiduOcrResponse.java           # OCR 响应数据模型
+│   │   │   │   ├── BaiduTokenResponse.java         # Token 响应数据模型
+│   │   │   │   ├── SettingsManager.java            # SharedPreferences 设置管理
+│   │   │   │   ├── HistoryRepository.java          # 历史记录存取（支持删除、清空）
+│   │   │   │   ├── HistoryAdapter.java             # 历史记录 RecyclerView Adapter
+│   │   │   │   └── PermissionHelper.java           # 权限检查与引导工具
 │   │   │   ├── res/
-│   │   │   │   ├── layout/                           # activity_main.xml, item_history.xml
+│   │   │   │   ├── layout/                         # activity_main.xml, item_history.xml
 │   │   │   │   ├── values/strings.xml, colors.xml, themes.xml
 │   │   │   │   └── xml/ocr_accessibility_service.xml, network_security_config.xml
-│   │   ├── test/                                    # 单元测试
-│   │   └── androidTest/                             # 仪器化测试
+│   │   ├── test/                                   # 单元测试
+│   │   └── androidTest/                            # 仪器化测试
 │   └── build.gradle
 ├── init.gradle                                       # Gradle 全局镜像配置模板
-└── README.md                                         # 本文档
+└── README.md                                        # 本文档
 ```
 
 ---
@@ -138,12 +147,14 @@ cd AndroidOcrScreen
 - 前台服务，通知栏常驻
 - 管理屏幕边缘悬浮球的显示/隐藏/拖拽
 - 监听屏幕状态（锁屏隐藏，亮屏恢复）
-- MediaProjection 截图流程控制
+- **持续运行 VirtualDisplay**，避免每次截图都弹窗
+- 监听屏幕分辨率变化，自动重建截图环境
 - 协调 SelectionOverlayView → BaiduOcrRepository → ResultPanelView
 
-**关键回调**:
-- `ACTION_PROJECTION_RESULT`: 接收屏幕录制权限结果
-- `screenReceiver`: 监听 `ACTION_SCREEN_OFF` / `ACTION_USER_PRESENT`
+**关键特性**:
+- `projectionInitialized`: 标记 VirtualDisplay 是否已初始化
+- `DisplayManager.DisplayListener`: 监听屏幕变化
+- `captureScreen()`: 快速从缓存的 ImageReader 获取截图
 
 ---
 
@@ -161,9 +172,10 @@ cd AndroidOcrScreen
 - 松手 360ms 后自动确认裁剪
 - `loading` 状态显示遮罩
 
-**关键成员**:
-- `confirmRunnable`: 延时确认执行
-- `cropSelection()`: 裁剪选区 Bitmap 并回调
+**关键特性**:
+- `activePointerId`: 追踪活跃触摸点，防止多指操作混乱
+- `confirmed` 标志：防止重复触发 OCR 请求
+- ACTION_DOWN 时重置确认状态，支持中途取消
 
 ---
 
@@ -178,16 +190,6 @@ cd AndroidOcrScreen
 - 内容多时支持静默垂直滚动（`ScrollView` + `scrollBarEnabled=false` + `overScroll=never`）
 - 保留换行符
 
-**布局结构**:
-```
-ResultPanelView (FrameLayout, fixed height)
-└─ card (LinearLayout vertical)
-   ├─ header: [标题] [×] ← 拖拽把手
-   ├─ ScrollView (weight=1, fills remaining)
-   │    └─ rowsContainer: ☐ text [复制] x N
-   └─ footer: [全选] [复制全部]
-```
-
 ---
 
 ### 4. BaiduOcrRepository
@@ -201,13 +203,15 @@ ResultPanelView (FrameLayout, fixed height)
 - 错误映射（网络未连接/凭证无效/API 错误）
 - 自动保存识别成功文本到历史记录（最近 100条）
 
-**API**:
-```kotlin
-fun recognize(
-    bitmap: Bitmap,
-    callback: (success: List<String>, fullText: String, error: String?) -> Unit
-)
-```
+---
+
+### 5. HistoryRepository
+
+> 路径: `app/src/main/java/com/example/androidpumushibie/HistoryRepository.java`
+
+**职责**:
+- 历史记录本地存储（SharedPreferences + Gson）
+- 支持单条删除和清空全部
 
 ---
 
@@ -247,7 +251,7 @@ fun recognize(
 
 ### 1. 语言与风格
 
-- 当前项目主要用 Java，可逐步迁移到 Kotlin（推荐）
+- 当前项目主要用 Java
 - 遵循标准 Android 命名约定：
   - 类名：大驼峰（`OverlayControlService`）
   - 方法名/变量名：小驼峰（`onHandleClick()`）
@@ -257,7 +261,7 @@ fun recognize(
 ### 2. 文件组织
 
 - 按功能分包（当前已做到）
-- Layout 和 string 资源与 Java/Kotlin 逻辑分开
+- Layout 和 string 资源与 Java 逻辑分开
 - 避免在单个文件超过 600 行
 
 ### 3. 注释
@@ -270,7 +274,7 @@ fun recognize(
 
 - 所有异常 Toast 提示，不打断用户
 - 尽量保持服务存活，在可恢复时回退
-- 网络请求不要阻塞主线程，用 Retrofit/协程/ExecutorService
+- 网络请求不要阻塞主线程，用 Retrofit/ExecutorService
 
 ---
 
@@ -296,8 +300,11 @@ fun recognize(
 | 悬浮球可拖拽移动 | 是 |
 | 锁屏后隐藏，亮屏后恢复 | 是 |
 | 点击悬浮球触发截屏授权（首次） | 是 |
+| 后续点击不弹窗（持续 VirtualDisplay） | 是 |
 | 框选可拖拽四角调整大小 | 是 |
 | 框选可拖拽内部整体移动 | 是 |
+| 多指触摸时不会异常 | 是 |
+| 屏幕旋转后截图比例正确 | 是 |
 | OCR 识别成功并展示 | 是 |
 | 逐行勾选、跨行多选可用 | 是 |
 | 点击行末复制可复制单行 | 是 |
@@ -305,6 +312,8 @@ fun recognize(
 | 复制后自动关闭面板、恢复悬浮球 | 是 |
 | 结果面板可拖拽 | 是 |
 | 历史记录保存并展示最近 100 条 | 是 |
+| 历史记录支持单条删除 | 是 |
+| 历史记录支持清空全部 | 是 |
 | 结果面板无垂直滚动条 | 是 |
 | 百度 Token 可缓存和自动刷新 | 是 |
 
@@ -314,7 +323,7 @@ fun recognize(
 
 ### Q1: 为什么会有 MediaProjection 屏幕录制权限弹窗？
 
-A1: 这是 Android 系统安全限制，任何截取屏幕内容的 App 都需要用户显式授权。如果你升级到 minSdk ≥30，可以改用 `AccessibilityService.takeScreenshot()` 来避免这个弹窗。
+A1: 这是 Android 系统安全限制，任何截取屏幕内容的 App 都需要用户显式授权。**首次授权后**，应用会持续运行 VirtualDisplay，后续使用不会再弹窗。
 
 ### Q2: 如何修改悬浮球大小/透明度/默认位置？
 
@@ -343,6 +352,14 @@ A6: 检查：
 1. 是否已引导用户添加到电池优化白名单
 2. 系统是否有「权限限制」（部分国产 ROM）
 3. 尝试在 `OverlayControlService` 里微调 `WindowManager.LayoutParams.FLAG_*`
+
+### Q7: 屏幕旋转后截图比例错乱？
+
+A7: 已修复。应用会监听屏幕分辨率变化，自动重建 VirtualDisplay 环境。
+
+### Q8: 多指操作时应用异常？
+
+A8: 已修复。应用会忽略多指触摸，只处理第一个触摸点的事件。
 
 ---
 
