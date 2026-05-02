@@ -31,6 +31,7 @@ public class SelectionOverlayView extends FrameLayout {
     private static final int MODE_RIGHT_TOP = 4;
     private static final int MODE_LEFT_BOTTOM = 5;
     private static final int MODE_RIGHT_BOTTOM = 6;
+    private static final int CONFIRM_DELAY_MS = 360;
 
     private final Bitmap screenshot;
     private final Listener listener;
@@ -50,6 +51,9 @@ public class SelectionOverlayView extends FrameLayout {
     private float lastY;
     private int touchMode = MODE_IDLE;
     private boolean loading;
+    private boolean confirmed;
+    private int activePointerId = INVALID_POINTER_ID;
+    private static final int INVALID_POINTER_ID = -1;
 
     public SelectionOverlayView(@NonNull Context context,
                                 @NonNull Bitmap screenshot,
@@ -62,7 +66,8 @@ public class SelectionOverlayView extends FrameLayout {
         handleRadiusPx = dpToPx(10);
 
         confirmRunnable = () -> {
-            if (listener != null && hasValidSelection()) {
+            if (listener != null && hasValidSelection() && !confirmed) {
+                confirmed = true;
                 loading = true;
                 invalidate();
                 listener.onSelectionConfirmed(cropSelection());
@@ -127,11 +132,22 @@ public class SelectionOverlayView extends FrameLayout {
         if (loading) {
             return true;
         }
-        float x = event.getX();
-        float y = event.getY();
+
+        int pointerCount = event.getPointerCount();
+        if (pointerCount > 1) {
+            return true;
+        }
+
+        int actionIndex = event.getActionIndex();
+        int pointerId = event.getPointerId(actionIndex);
+
+        float x = event.getX(actionIndex);
+        float y = event.getY(actionIndex);
+
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 handler.removeCallbacks(confirmRunnable);
+                activePointerId = pointerId;
                 downX = x;
                 downY = y;
                 lastX = x;
@@ -140,9 +156,16 @@ public class SelectionOverlayView extends FrameLayout {
                 if (touchMode == MODE_DRAW) {
                     selectionRect.set(x, y, x, y);
                 }
+                if (confirmed) {
+                    confirmed = false;
+                    loading = false;
+                }
                 invalidate();
                 return true;
             case MotionEvent.ACTION_MOVE:
+                if (pointerId != activePointerId) {
+                    return true;
+                }
                 handleMove(x, y);
                 lastX = x;
                 lastY = y;
@@ -150,6 +173,10 @@ public class SelectionOverlayView extends FrameLayout {
                 return true;
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                if (pointerId != activePointerId) {
+                    return true;
+                }
+                activePointerId = INVALID_POINTER_ID;
                 if (hasValidSelection()) {
                     handler.postDelayed(confirmRunnable, 360);
                 }

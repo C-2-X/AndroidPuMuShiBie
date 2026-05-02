@@ -41,4 +41,16 @@ public class HistoryRepository {
         }
         preferences.edit().putString(KEY_HISTORY, gson.toJson(history, listType)).apply();
     }
+
+    public void deleteRecord(int position) {
+        List<String> history = getHistory();
+        if (position >= 0 && position < history.size()) {
+            history.remove(position);
+            preferences.edit().putString(KEY_HISTORY, gson.toJson(history, listType)).apply();
+        }
+    }
+
+    public void clearHistory() {
+        preferences.edit().putString(KEY_HISTORY, "[]").apply();
+    }
 }

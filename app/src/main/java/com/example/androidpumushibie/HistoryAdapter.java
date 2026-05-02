@@ -1,6 +1,7 @@
 package com.example.androidpumushibie;
 
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,15 @@ import java.util.List;
 
 public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryViewHolder> {
     private final List<String> items = new ArrayList<>();
+    private OnItemDeleteListener deleteListener;
+
+    public interface OnItemDeleteListener {
+        void onItemDelete(int position);
+    }
+
+    public void setOnItemDeleteListener(OnItemDeleteListener listener) {
+        this.deleteListener = listener;
+    }
 
     public void submitList(List<String> values) {
         items.clear();
@@ -39,7 +49,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
         return items.size();
     }
 
-    static class HistoryViewHolder extends RecyclerView.ViewHolder {
+    class HistoryViewHolder extends RecyclerView.ViewHolder {
         private final ItemHistoryBinding binding;
 
         HistoryViewHolder(ItemHistoryBinding binding) {
@@ -53,6 +63,15 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.HistoryV
                             + " " + (position + 1)
             );
             binding.historyContentText.setText(text);
+
+            binding.deleteButton.setOnClickListener(v -> {
+                if (deleteListener != null) {
+                    int adapterPosition = getAdapterPosition();
+                    if (adapterPosition != RecyclerView.NO_POSITION) {
+                        deleteListener.onItemDelete(adapterPosition);
+                    }
+                }
+            });
         }
     }
 }

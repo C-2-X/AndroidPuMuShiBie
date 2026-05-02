@@ -17,8 +17,11 @@
     <string name="save_button">保存设置</string>
     <string name="floating_section_title">悬浮条外观</string>
     <string name="history_section_title">历史记录</string>
-    <string name="history_section_subtitle">仅保存最近 100 条识别成功文本，支持查看，不支持删除或编辑。</string>
+    <string name="history_section_subtitle">仅保存最近 100 条识别成功文本</string>
     <string name="history_empty">还没有识别历史</string>
+    <string name="delete_history_item">删除</string>
+    <string name="clear_history">清空全部</string>
+    <string name="clear_history_confirm">确定要清空所有历史记录吗？此操作不可撤销。</string>
     <string name="provider_baidu">百度 OCR</string>
     <string name="service_running">悬浮条服务已运行</string>
     <string name="service_stopped">悬浮条服务未运行</string>

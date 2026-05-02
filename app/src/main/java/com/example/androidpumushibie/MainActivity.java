@@ -66,6 +66,23 @@ public class MainActivity extends AppCompatActivity {
         binding.historyRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         binding.historyRecyclerView.setNestedScrollingEnabled(false);
         binding.historyRecyclerView.setAdapter(historyAdapter);
+
+        historyAdapter.setOnItemDeleteListener(position -> {
+            historyRepository.deleteRecord(position);
+            refreshHistory();
+        });
+
+        binding.clearHistoryButton.setOnClickListener(v -> {
+            new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle(R.string.clear_history)
+                    .setMessage(R.string.clear_history_confirm)
+                    .setPositiveButton(R.string.clear_history, (dialog, which) -> {
+                        historyRepository.clearHistory();
+                        refreshHistory();
+                    })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+        });
     }
 
     private void setupListeners() {

@@ -28,6 +28,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.util.DisplayMetrics;
+import android.view.Display;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -67,6 +68,7 @@ public class OverlayControlService extends Service {
     private int screenWidth;
     private int screenHeight;
     private int screenDensity;
+    private boolean projectionInitialized;
 
     private SelectionOverlayView selectionOverlay;
     private WindowManager.LayoutParams overlayParams;
@@ -78,6 +80,8 @@ public class OverlayControlService extends Service {
     private boolean isShowingResult;
     private boolean screenOff;
     private BroadcastReceiver screenReceiver;
+    private DisplayManager displayManager;
+    private DisplayManager.DisplayListener displayListener;
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
@@ -89,6 +93,20 @@ public class OverlayControlService extends Service {
         historyRepository = new HistoryRepository(this);
         ocrRepository = new BaiduOcrRepository(this, settingsManager, historyRepository);
         projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        displayManager = (DisplayManager) getSystemService(DISPLAY_SERVICE);
+
+        displayListener = new DisplayManager.DisplayListener() {
+            @Override
+            public void onDisplayAdded(int displayId) {}
+
+            @Override
+            public void onDisplayRemoved(int displayId) {}
+
+            @Override
+            public void onDisplayChanged(int displayId) {
+                handleDisplayChange();
+            }
+        };
 
         DisplayMetrics metrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getRealMetrics(metrics);
@@ -98,6 +116,7 @@ public class OverlayControlService extends Service {
 
         screenOff = isScreenLocked();
         registerScreenReceiver();
+        displayManager.registerDisplayListener(displayListener, mainHandler);
 
         createNotificationChannel();
     }
@@ -133,10 +152,12 @@ public class OverlayControlService extends Service {
     @Override
     public void onDestroy() {
         unregisterScreenReceiver();
+        if (displayManager != null) {
+            displayManager.unregisterDisplayListener(displayListener);
+        }
         hideHandle();
         hideSelectionOverlay();
         hideResultPanel();
-        stopCapture();
         cleanupMediaProjection();
         super.onDestroy();
     }
@@ -357,10 +378,18 @@ public class OverlayControlService extends Service {
             return;
         }
 
+        if (!projectionInitialized) {
+            initProjection();
+        }
+
+        performCaptureAndShowSelection();
+    }
+
+    private void initProjection() {
         try {
             imageReader = ImageReader.newInstance(
                     screenWidth, screenHeight,
-                    PixelFormat.RGBA_8888, 1
+                    PixelFormat.RGBA_8888, 2
             );
 
             virtualDisplay = mediaProjection.createVirtualDisplay(
@@ -371,39 +400,41 @@ public class OverlayControlService extends Service {
                     null, null
             );
 
-            mainHandler.postDelayed(this::performCapture, CAPTURE_DELAY_MS);
+            projectionInitialized = true;
         } catch (Exception e) {
-            isSelecting = false;
-            showHandle();
-            showToast(getString(R.string.toast_capture_failed));
+            projectionInitialized = false;
         }
     }
 
-    private void performCapture() {
-        Bitmap bitmap = null;
-        try {
-            Image image = imageReader != null ? imageReader.acquireLatestImage() : null;
-            if (image != null) {
-                bitmap = imageToBitmap(image);
-                image.close();
-            }
-        } catch (Exception e) {
-            bitmap = null;
-        } finally {
-            stopCapture();
-        }
-
+    private void performCaptureAndShowSelection() {
+        Bitmap bitmap = captureScreen();
         if (bitmap == null) {
             isSelecting = false;
             showHandle();
             showToast(getString(R.string.toast_capture_failed));
             return;
         }
-
         showSelectionOverlay(bitmap);
     }
 
-    private void stopCapture() {
+    private Bitmap captureScreen() {
+        if (imageReader == null) {
+            return null;
+        }
+        try {
+            Image image = imageReader.acquireLatestImage();
+            if (image != null) {
+                Bitmap bitmap = imageToBitmap(image);
+                image.close();
+                return bitmap;
+            }
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    private void cleanupMediaProjection() {
+        projectionInitialized = false;
         if (virtualDisplay != null) {
             try {
                 virtualDisplay.release();
@@ -418,16 +449,34 @@ public class OverlayControlService extends Service {
             }
             imageReader = null;
         }
-    }
-
-    private void cleanupMediaProjection() {
-        stopCapture();
         if (mediaProjection != null) {
             try {
                 mediaProjection.stop();
             } catch (Exception ignored) {
             }
             mediaProjection = null;
+        }
+    }
+
+    private void handleDisplayChange() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getRealMetrics(metrics);
+        int newWidth = metrics.widthPixels;
+        int newHeight = metrics.heightPixels;
+        int newDensity = metrics.densityDpi;
+
+        if (newWidth != screenWidth || newHeight != screenHeight) {
+            screenWidth = newWidth;
+            screenHeight = newHeight;
+            screenDensity = newDensity;
+            projectionInitialized = false;
+
+            if (isSelecting || isShowingResult) {
+                return;
+            }
+
+            cleanupMediaProjection();
+            initProjection();
         }
     }
 
